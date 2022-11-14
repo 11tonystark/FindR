@@ -1,29 +1,31 @@
 # Recession Predictor with Factor affecting Financial Crisis
 
-This repository contains code & documentation for a data wrangling group project on the multiple dataset **Financial Data** (https://fred.stlouisfed.org).
+This repository contains code & documentation for a data wrangling group project on the multiple dataset **Financial Data** (https://fred.stlouisfed.org) (https://stats.oecd.org/Index.aspx?DataSetCode=MEI_CLI) (https://www.nber.org/research/business-cycle-dating) (https://www.eia.gov) (https://www.macrohistory.net/database/) (https://pitchbook.com/data).
 
 **Team Members**
-1. Ansh Gupta
-2. Bo Qin
-3. Chinaza Nmam
-4. Digvijay Yadav
-5. Era Wu
+1. Tanmay Shukla 
+2. Hong Ye
+3. Miaomiao Fu
+4. Mingliang Ge
+5. Xiaoqing Xia
 
 **Our Approaches**
 
-1. Cleaning Dataset using Microsoft Excel
-2. Generating Word Clouds
-3. Sentiment Analysis
-4. Developing a model for Genre Prediction.
+1. Data Collection Using Webscraping
+2. Cleaning Dataset using Microsoft Excel
+3. Feature Slection 
+4. Financial Analysis
+5. Developing a models for Financial Crisis Prediction.
+6. Implementation of Stock Simulator 
 
 **Libraries Used**
 
 1. tidytext
-2. stringr
-3. readxl
-4. wordcloud
+2. seaborn
+3. requests
+4. pandas
 5. wordcloud2
-6. RColorBrewer
+6. Keras
 7. dplyr
 8. tidyr
 9. ggplot2
@@ -31,12 +33,12 @@ This repository contains code & documentation for a data wrangling group project
 11. Sklearn
 12. Math
 13. re
-14. NKTK
+14. yfinance 
 15. Seaborn, Pandas, Numpy, tqdm
-16. syuzhet (for the get_nrc_sentiment) function
+
 
 **Languages Used**
 
-1. [R Programming](https://www.r-project.org/about.html) - Used for Sentiment Analysis and WordCloud generation.
-2. [Python3](https://www.python.org/download/releases/3.0/) - Used for Genre Prediction.
-3. [Microsoft Excel](https://www.microsoft.com/en-us/microsoft-365/excel) - Primary tool for cleaning our Netflix Data.
+1. [R Programming](https://www.r-project.org/about.html) - Used for Data Visualization and Ml Modeling .
+2. [Python3](https://www.python.org/download/releases/3.0/) - Used for Financial Crisis Prediction and Classification of Factor That can cause Financial Crisis.
+3. [Microsoft Excel](https://www.microsoft.com/en-us/microsoft-365/excel) - Primary tool for cleaning and Prediction of our Finance Data.
