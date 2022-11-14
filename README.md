@@ -36,6 +36,11 @@ This repository contains code & documentation for a data wrangling group project
 14. yfinance 
 15. Seaborn, Pandas, Numpy, tqdm
 
+**Folder Description**
+1. Recession Predicton and Simulator -  Use ReadME file to run the code 
+2. Recession Indicator Using ANN - Use ReadME file to run the code 
+3. Recession Prediction using R -  Use ReadME file to run the code 
+
 
 **Languages Used**
 
