@@ -22,6 +22,9 @@ This repository contains code & documentation for a data wrangling group project
 1. Pipeline-FindR.pdf 
 2. Detail Explanation of our Project 
 
+**Introduction**
+Financial crises have significant implications for the lives of billions of people. Bad economic decisions during the financial recession can cause people's assets to shrink. Our goal is to predict the likelihood of another recession in the future using the two recessions we have experienced. Also, it is to help us make more accurate financial decisions when we know exactly when the recession will occur and how long it will last, such as investing in stocks at the lowest point and avoiding entering the stock market during the economic downturn. Spotting their warning signs early can facilitate the timely activation of countermeasures to prevent them. 
+
 **Libraries Used**
 
 1. tidytext
