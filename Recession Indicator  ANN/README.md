@@ -15,10 +15,9 @@ The model tends to start rising from 0.0% when a recession is coming.
 | Overlapping the indicator model graph and the actual recession graph. ![Preview](https://i.imgur.com/IAoGDmO.jpg) |
 
 
-Overfitting possibility? Most definitely. But when the model was trained on recession data before the Great Recession, it was still able to predict the recession and subsequent market pull-backs in 2011 and 2015. 
+Overfitting possibility? Most definitely. But when the model was trained on recession data before the Great Recession, it was still able to predict the recession and subsequent market pull-backs in 2008 and 2020. 
 
 ---
-
 
 
 
@@ -27,20 +26,6 @@ Overfitting possibility? Most definitely. But when the model was trained on rece
 * pandas
 * keras (needs tensorflow and theano, with tensorflow being the backend to keras)
 
-
-### Steps for obtaining country data: 
-1. First go to http://stats.oecd.org/Index.aspx?DataSetCode=MEI_CLI
-2. In the left panel menu, select "Composite Leading Indicators (MEI)"
-3. Select "OECD Standardised CCI, Amplitude adjusted (Long term average=100), sa" for the dropdown next to Subject  
-    Any value below 100 for a month, indicates economic growth below that country's average. The higher the number past 100, the better.
-4. Click on the "Time" header label under "Country" on the graph.   
-    Top should have "Select time range" selected. 
-5. Select the Monthly checkbox.
-6. Can use the dropdown list in the "From:" column to select the oldest date, or select the radiobox for "Select latest data", and use the dropdown list corresponding to the monthly row, and select the higher number of months.
-	Should pick starting from 1970, or 520- months. Data before 1970 is inaccurate or not available. 
-7. In the top menu, click Export, then CSV, and Download.
-8. Rename the file downloaded to "MEI_standardized_CCI.csv", and move to the root project folder.
-9. Download CSV from https://fred.stlouisfed.org/series/USREC
 
 
 ### Steps for running: 
