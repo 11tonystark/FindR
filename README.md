@@ -3,11 +3,11 @@
 This repository contains code & documentation for a data wrangling group project on the multiple dataset **Financial Data** (https://fred.stlouisfed.org) (https://stats.oecd.org/Index.aspx?DataSetCode=MEI_CLI) (https://www.nber.org/research/business-cycle-dating) (https://www.eia.gov) (https://www.macrohistory.net/database/) (https://pitchbook.com/data).
 
 **Team Members**
-1. Tanmay Shukla 
-2. Hong Ye
-3. Miaomiao Fu
-4. Mingliang Ge
-5. Xiaoqing Xia
+1. Tanmay Shukla - Mentor and Developer 
+2. Hong Ye - SQL, Python, Data Prediction and Manipulation 
+3. Miaomiao Fu - Excel, Financial Analysis, Data Visualization 
+4. Mingliang Ge - Research Analysis, Python, Data Cleaning 
+5. Xiaoqing Xia - R, Modelling, Data Wrangling 
 
 **Our Approaches**
 
