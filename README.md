@@ -18,6 +18,10 @@ This repository contains code & documentation for a data wrangling group project
 5. Developing a models for Financial Crisis Prediction.
 6. Implementation of Stock Simulator 
 
+**Documentation**
+1. Pipeline-FindR.pdf 
+2. Detail Explanation of our Project 
+
 **Libraries Used**
 
 1. tidytext
