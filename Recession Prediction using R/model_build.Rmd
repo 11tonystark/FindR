@@ -1,0 +1,612 @@
+---
+
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+
+# setting up shop 
+library(tidyverse)
+library(ggplot2)
+library(eia)
+library(fredr)
+library(zoo)
+library(plotly)
+library(caret)
+library(gbm)
+library(doParallel)
+library(stargazer)
+library(rjson)
+library(lubridate)
+library(jsonlite)
+library(ggraph)
+library(igraph)
+library(kableExtra)
+
+
+# load API key
+eia_api_key <- readtext::readtext("eia_api_key.txt") %>%
+  .$text
+fred_api_key <- readtext::readtext("fred_api_key.txt") %>%
+  .$text
+eia_set_key(eia_api_key)
+fredr_set_key(fred_api_key)
+
+# load datasets
+gdp <- readxl::read_excel("./data/Monthly GDP for Project.xlsx")
+Pull <- readxl::read_excel("./data/Pull.xlsx")
+
+# setting seed to ensure reproducibility
+set.seed(0506)
+```
+
+## Regression Analysis  
+  
+```{r}
+
+# Real GDP (Level) > Y
+
+#Probability of Losing a Job >X3
+#Job Openings per Unemployed Person >X4	
+#Ratio of Hires to Openings	> X5
+#Business Survey > X6
+#Business Survey (Peak Diff) > X7
+#Yield Curve	> X8
+#Excnomic Policy Index	> X9
+#Equity Uncertainty	> X10
+#Unemployment Rate (YoY) >X11
+
+LOGY <- log(Pull$Y) 
+LOGY1 <- log(lag(Pull$Y,1))
+
+AnnGDP <- (LOGY-LOGY1)*12
+GDP_LOG <- log(Pull$Y) 
+
+# X1 Functional Form Test
+
+X1Squared <- Pull$X1*Pull$X1
+X1Root <- sqrt(Pull$X1)
+TestX1 <- lm(AnnGDP~Pull$X1+X1Squared)
+TestX1
+stargazer(TestX1, type="text", title="Baseline Results", single.row=TRUE, 
+          ci=TRUE, ci.level=0.95)
+A1 <- (Pull$X1+X1Squared)
+summary(TestX1)
+
+# X2 Functional Form Test
+
+X2Squared <- Pull$X2*Pull$X2
+X2Root <- sqrt(Pull$X2)
+TestX2 <- lm(AnnGDP~Pull$X2)
+TestX2
+stargazer(TestX2, type="text", title="Baseline Results", single.row=TRUE, 
+          ci=TRUE, ci.level=0.95)
+
+A2 <- Pull$X2
+
+# X3 Functional Form Test
+
+X3Squared <- Pull$X3*Pull$X3
+X3Root <- sqrt(Pull$X3)
+TestX3 <- lm(AnnGDP~Pull$X3)
+TestX3
+stargazer(TestX3, type="text", title="Baseline Results", single.row=TRUE, 
+          ci=TRUE, ci.level=0.95)
+
+A3 <- Pull$X3
+
+# X4 Functional Form Test
+
+X4Squared <- Pull$X4*Pull$X4
+X4Root <- sqrt(Pull$X4)
+TestX4 <-lm(AnnGDP~Pull$X4+X4Squared)
+TestX4
+stargazer(TestX4, type="text", title="Baseline Results", single.row=TRUE, 
+          ci=TRUE, ci.level=0.95)
+
+A4=(Pull$X4+X4Squared)
+
+# X5 Functional Form Test
+
+X5Squared <- Pull$X5*Pull$X5
+X5Root <- sqrt(Pull$X5)
+TestX5 <- lm(AnnGDP~Pull$X5+X5Squared)
+TestX5
+stargazer(TestX5, type="text", title="Baseline Results", single.row=TRUE, 
+          ci=TRUE, ci.level=0.95)
+
+A5 <- Pull$X5+X5Squared
+
+
+# X6 Functional Form Test
+X6Squared <- Pull$X6*Pull$X6
+X6Root <- sqrt(Pull$X6)
+TestX6 <- lm(AnnGDP~Pull$X6+X6Squared)
+TestX6
+stargazer(TestX6, type="text", title="Baseline Results", single.row=TRUE, 
+          ci=TRUE, ci.level=0.95)
+
+A6 <- Pull$X6+X6Squared
+
+# X7 Functional Form Test
+X7Squared <- Pull$X7*Pull$X7
+X7Root <- sqrt(Pull$X7)
+TestX7 <- lm(AnnGDP~Pull$X7+X7Squared)
+TestX7
+stargazer(TestX7, type="text", title="Baseline Results", single.row=TRUE, 
+          ci=TRUE, ci.level=0.95)
+
+A7 <- Pull$X7+X7Squared
+
+# X8 Functional Form Test
+X8Squared <- Pull$X8*Pull$X8
+X8Root <- sqrt(Pull$X8)
+TestX8 <- lm(AnnGDP~Pull$X8)
+TestX8
+stargazer(TestX8, type="text", title="Baseline Results", single.row=TRUE, 
+          ci=TRUE, ci.level=0.95)
+
+A8 <- Pull$X8
+
+
+# X9 Functional Form Test
+X9Squared <- Pull$X9*Pull$X9
+X9Root <- sqrt(Pull$X9)
+TestX9 <- lm(AnnGDP~Pull$X9+X9Squared)
+TestX9
+stargazer(TestX9, type="text", title="Baseline Results", single.row=TRUE, 
+          ci=TRUE, ci.level=0.95)
+
+A9 <- Pull$X9+X9Squared
+
+# X10 Functional Form Test
+X10Squared<- Pull$X10*Pull$X10
+X10Root <- sqrt(Pull$X10)
+TestX10 <- lm(AnnGDP~Pull$X10)
+TestX10
+stargazer(TestX10, type="text", title="Baseline Results", single.row=TRUE, 
+          ci=TRUE, ci.level=0.95)
+
+A10 <- Pull$X10
+
+
+# X11 Functional Form Test
+X11Squared <- Pull$X11*Pull$X11
+X11Root <- sqrt(Pull$X11)
+TestX11 <- lm(AnnGDP~Pull$X11)
+TestX11
+stargazer(TestX11, type="text", title="Baseline Results", single.row=TRUE, 
+          ci=TRUE, ci.level=0.95)
+
+A11 <- Pull$X11
+
+
+
+#First Test of All Best Form Variables
+
+CurrentGDP <- lm(GDP_LOG~ A3+A4+A5+A6+A7+A8+A9+A10+A11)
+CurrentGDP
+stargazer(CurrentGDP, type="text", title="Baseline Results", single.row=TRUE, 
+          ci=TRUE, ci.level=0.95)
+
+
+# Gathering all predictors 
+
+predictors <- cbind(A3,A4,A5,A6,A7,A8,A9,A10,A11,GDP_LOG) %>%
+  as.data.frame()
+
+saveRDS(predictors, "./models/predictors.RDS")
+# function to automate lag calculation
+lagged_predictors <- function(n_lags, predictor_df, n_predictors=10){
+  pred_df <- sapply(1:n_predictors, function(x){
+    lag(predictor_df[,x],n_lags)
+  } )
+  pred_df <- as.data.frame(pred_df)
+  return(pred_df)
+}
+
+# one month lag
+predictors_oml <- lagged_predictors(1,predictors)
+predictors_oml <- cbind(GDP_LOG, predictors_oml) %>%
+  drop_na()
+
+# sampling then testing
+testIDs <- sample(1:dim(predictors_oml)[1], 0.8*dim(predictors_oml)[1])
+training_predictors_oml <- predictors_oml[testIDs,]
+testing_predictors_oml <- predictors_oml[-testIDs,]
+gdp_oml_lm <- lm(GDP_LOG ~., data = training_predictors_oml)
+summary(gdp_oml_lm)
+
+pred_gdp_log_oml <- predict.lm(gdp_oml_lm, newdata = testing_predictors_oml)
+
+ggplot() + 
+  geom_point(aes(x = testing_predictors_oml$GDP_LOG, y = pred_gdp_log_oml)) + 
+  geom_abline(intercept = 0, slope = 1) + 
+  labs(x = "Actual Logged GDP",
+       y = "Predicted Logged GDP")
+
+training_res <- training_predictors_oml$GDP_LOG - predict(gdp_oml_lm, training_predictors_oml)
+holdout_res <- testing_predictors_oml$GDP_LOG - predict(gdp_oml_lm, testing_predictors_oml)
+# t-test to check whether predicted residuals are different from zero 
+t.test(holdout_res, mu = 0)
+# test whether holdout residuals and training residuals are the same
+t.test(training_res, holdout_res)
+```
+  
+
+## Data Processing for Random Forest  
+
+Relevant time scale: Monthly  
+Datasets: Electricity generation, Rigs count, GDP, OECD Business Tendency Survey, Percentage of Civilian Workforce Unemployed >15 weeks
+
+```{r downloading datasets and initial processing, warning=FALSE}
+## pct labor force unemloyed for more than 15 weeks
+LT_unemployed <- fredr(series_id = "U1RATE", observation_start = as.Date("1973-01-01"))
+## yield curve 10year minue 3month
+yield_curve <- fredr(series_id = "T10Y3M", observation_start=as.Date('1947-01-01'))
+
+## business tendenc
+business_tendenc <- fredr(series_id = "BSCICP03USM665S", observation_start = as.Date("1973-01-01"))
+
+## finding local peaks where m is the number of points on either side of the peak 
+find_peaks <- function (x, m = 3){
+  shape <- diff(sign(diff(x, na.pad = FALSE)))
+  pks <- sapply(which(shape < 0), FUN = function(i){
+    z <- i - m + 1
+    z <- ifelse(z > 0, z, 1)
+    w <- i + m + 1
+    w <- ifelse(w < length(x), w, length(x))
+    if(all(x[c(z : i, (i + 2) : w)] <= x[i + 1])) return(i + 1) else return(numeric(0))
+  })
+  pks <- unlist(pks)
+  pks
+}
+
+distance_from_peak <- function(current_position, peaks_vec, time_series_value){
+  if (current_position > peaks_vec[1]){
+  distance <- peaks_vec-current_position
+  closest <- min(distance)
+  distance_pct <- (time_series_value[current_position] - time_series_value[current_position+closest])/time_series_value[current_position+closest]
+  distance_pct <- ifelse(is.null(distance_pct) == T, 0, distance_pct)
+  distance_pct
+  } else { distance_pct <- 0
+  distance_pct}
+}
+
+business_local_peaks <- find_peaks(business_tendenc$value)
+distance_peak <- sapply(1:dim(business_tendenc)[1], function(x){
+  distance_pct <- distance_from_peak(x, business_local_peaks, business_tendenc$value)
+  distance_pct
+})
+
+business_tendencies <- cbind(business_tendenc, distance_peak)
+business_tendencies[is.na(business_tendencies)] <- 0
+write.csv(business_tendencies, "./data/business_tendencies.csv")
+business_sentiment <- business_tendencies
+
+## Electricity Data
+# hourly demand
+
+lower48_hourly_demand <- paste("http://api.eia.gov/series/?series_id=EBA.US48-ALL.D.H&api_key=", eia_api_key, sep = "") %>%
+  fromJSON() 
+lower48_hourly_demand_list <- lower48_hourly_demand$series %>%
+  select(data)%>%
+  .[[1]] 
+date_time <- lower48_hourly_demand_list[[1]][,1]
+demand <- lower48_hourly_demand_list[[1]][,2]
+lower48_hourly_demand_df <-  cbind(date_time, demand) %>%
+  data.frame(stringsAsFactors = F) %>%
+  mutate(date = as_date(ymd(substr(date_time, 1, 8))),
+         hour = as.numeric(substr(date_time, 10, 11)))
+
+## all generation
+# last updated 4/26
+all_electricity_generation_monthly <- eia_series(id = "TOTAL.ELETPUS.M")
+all_electricity_generation_monthly_df <- unnest(all_electricity_generation_monthly, cols="data")
+all_electricity_generation_monthly_df <- all_electricity_generation_monthly_df %>%
+  select(series_id, units, value, date, year, month)
+
+all_electricity_generation_monthly_df <- all_electricity_generation_monthly_df %>%
+  select(series_id, value, date, year, month) %>%
+  mutate(terawatt_value = value/1000, 
+         units = "Terawatthours",
+         date = as.yearmon(unique(substr(date, 1,7))))
+
+# hourly generation
+lower48_hourly_generation <- eia_series(id = "EBA.US48-ALL.NG.H")
+lower48_hourly_generation_df <- unnest(lower48_hourly_generation, cols = "data") %>%
+  select(series_id, units, value, date, year, month)
+
+# monthly generation from hourly
+
+lower48_monthly_generation_df <- lower48_hourly_generation_df %>%
+  group_by(year, month) %>%
+  summarise(value = (sum(value))/1000000,
+            units = "Terawatthours",
+            date = unique(substr(date, 1,7)))
+lower48_monthly_generation_df$date <- as.yearmon(lower48_monthly_generation_df$date)
+
+# intersecting all states with lower 48 | then calculate prop lower48 to extrapolate retroactively
+intersecting_months <- inner_join(lower48_monthly_generation_df, all_electricity_generation_monthly_df, by = "date")
+colnames(intersecting_months)[3] <- "lower48_terawatt" 
+intersecting_months$proportion <- intersecting_months$lower48_terawatt/intersecting_months$terawatt_value
+lower48_prop <- fivenum(intersecting_months$proportion)[3]
+all_electricity_generation_monthly_extrapolated_df <- all_electricity_generation_monthly_df %>%
+  mutate(lower48_terawatt = terawatt_value*lower48_prop) %>%
+  filter(date < "Jul 2015") %>%
+  select(year, month, lower48_terawatt, units, date)
+colnames(all_electricity_generation_monthly_extrapolated_df)[3] <- "value"
+lower48_monthly_generation_extrapolated_df <- bind_rows(all_electricity_generation_monthly_extrapolated_df, lower48_monthly_generation_df)
+write.csv(lower48_monthly_generation_extrapolated_df, "./data/monthly_electricity.csv")
+electricity <- lower48_monthly_generation_extrapolated_df
+
+## crude oil and nat gas rigs in operation 
+total_rigs <- eia_series(id = "TOTAL.OGNRPUS.M")
+total_rigs_df <- unnest(total_rigs, cols = "data") %>%
+  select(series_id, units, value, date, year, month)
+total_rigs_df <- total_rigs_df %>%
+  arrange(date) %>%
+  mutate(change_first_order = round((value - lag(value, 1))/lag(value,1),4),
+         change_second_order = ifelse(lag(change_first_order,1) == 0, 0, (change_first_order - lag(change_first_order, 1))/lag(change_first_order,1)))
+write.csv(total_rigs_df, "./data/monthly_rigs_count.csv")
+rigs <- total_rigs_df
+```
+  
+
+```{r data wrangling}
+gdp_complete <- gdp %>%
+  mutate(date = as.yearmon(substr((Date), 1, 7)),
+         `GDP (Continuously Compounding)` = `GDP (Continuously Compounding)`*100,
+         `GDP (YoY % Change)` = `GDP (YoY % Change)`*100, 
+         gdp_change_lagged = lag(`GDP (Continuously Compounding)`, 1)) %>%
+  filter(date >= "Jan 1973") %>%
+  select(date, `GDP (YoY % Change)`, `GDP (Continuously Compounding)`, gdp_change_lagged)
+electricity_complete <- electricity %>%
+  mutate(date = as.yearmon(date),
+         rate_generated_change = (value - lag(value,1))/lag(value,1),
+         rate_generated_change_secondorder = (rate_generated_change - lag(rate_generated_change,1))/lag(rate_generated_change,1)) %>%
+  select(date, rate_generated_change, rate_generated_change_secondorder) 
+rigs_complete <- rigs %>%
+  mutate(date = as.yearmon(substr(date, 1, 7))) %>%
+  select(date, change_first_order, change_second_order)
+colnames(rigs_complete)[2:3] <- c("rigs_change_first_order", "rigs_change_second_order")
+business_sentiment <- business_sentiment %>%
+  mutate(date = as.yearmon(substr(date, 1, 7)),
+         sentiment_change_first_order = (value - lag(value,1))/lag(value,1)) %>%
+  select(date, value, distance_peak, sentiment_change_first_order)
+colnames(business_sentiment)[2] <- "business_sentiment"
+sentiment_period <- rep(0, dim(business_sentiment)[1])
+for (i in 2:dim(business_sentiment)[1]){
+  sentiment_i = business_sentiment$sentiment_change_first_order[i]
+  #print(sentiment_i)
+  sentiment_h = business_sentiment$sentiment_change_first_order[i-1]
+  #print(sentiment_h)
+  sentiment_h[is.na(sentiment_h)] <- 0
+  if(sign(sentiment_i) == sign(sentiment_h)){
+    sentiment_period[i] = sentiment_period[i-1]+1
+  }
+  else{
+    sentiment_period[i] = 1
+  }
+}
+business_sentiment$sentiment_period <- sentiment_period
+
+LT_unemployed_complete <- LT_unemployed %>%
+  mutate(date = as.yearmon(substr(date, 1, 7)),
+         rate_change_first_order = (value - lag(value,1))/lag(value,1)) %>%
+  select(date, value, rate_change_first_order)
+colnames(LT_unemployed_complete)[2] <- "LT_unemployment"
+rate_change_period <- rep(0, dim(LT_unemployed_complete)[1])
+threshold_period <- rep(0, dim(LT_unemployed_complete)[1])
+for (i in 2:dim(LT_unemployed_complete)[1]){
+  sentiment_i = LT_unemployed_complete$rate_change_first_order[i]
+  #print(sentiment_i)
+  sentiment_h = LT_unemployed_complete$rate_change_first_order[i-1]
+  #print(sentiment_h)
+  sentiment_h[is.na(sentiment_h)] <- 0
+  if(sign(sentiment_i) == sign(sentiment_h)|sign(sentiment_i)==0){
+    rate_change_period[i] = rate_change_period[i-1]+1
+  }
+  else{
+   rate_change_period[i] = 1
+  }
+  if(LT_unemployed_complete$LT_unemployment[i] <= 1.5){
+    threshold_period[i] = threshold_period[i-1]+1
+  }
+}
+LT_unemployed_complete$threshold_period <- threshold_period
+LT_unemployed_complete$rate_change_period <- rate_change_period
+
+yield_curve[is.na(yield_curve)] <- 0
+yield_curve <- yield_curve %>%
+  drop_na() %>%
+  mutate(date = as.yearmon(substr(date, 1, 7)),
+         value = ifelse(value < 0, -1, 1)) %>%
+  group_by(date) %>%
+  summarise(value = min(value)) %>%
+  mutate(value = as.factor(value))
+colnames(yield_curve)[2] <- "curve"
+
+# inner join all together and to get recession dates
+econ_situation_nber_df <- inner_join(gdp_complete, electricity_complete, by = "date")
+econ_situation_nber_df <- inner_join(econ_situation_nber_df, rigs_complete, by = "date")
+econ_situation_nber_df <- inner_join(econ_situation_nber_df, business_sentiment, by = "date")
+econ_situation_nber_df <- inner_join(econ_situation_nber_df, LT_unemployed_complete, by = "date")
+NBER_recession_months <- econ_situation_nber_df$date %>%
+  .[c(11:27, 85:90, 103:119, 211:219, 339:347, 420:438)]
+econ_situation_nber_df <- inner_join(econ_situation_nber_df, yield_curve, by = "date")
+econ_situation_nber_df <- econ_situation_nber_df %>%
+  mutate(NBER_recession = ifelse(date %in% NBER_recession_months, "Y", "N"),
+         NBER_recession_next = as.factor(lead(NBER_recession,1)),
+         NBER_recession_two = as.factor(lead(NBER_recession,2))
+         ) %>%
+  as.data.frame() %>%
+  drop_na()
+
+DT::datatable(econ_situation_nber_df)
+```
+
+## Random Forest Modeling  
+  
+Two random forest models were trained. One to predict the probability of a recession the next month, and another for the following month. A previously-trained model was loaded to save time when knitting this document. 
+
+```{r random forest onemonth}
+# creating test-train data
+testIDs <- createDataPartition(econ_situation_nber_df$NBER_recession_next, p = 0.7, list = F)
+train_x <- econ_situation_nber_df[testIDs,c(4:17)]
+train_y <- econ_situation_nber_df$NBER_recession_next[testIDs]
+test_x <- econ_situation_nber_df[-testIDs, c(4:17)]
+test_y <- econ_situation_nber_df$NBER_recession_next[-testIDs] 
+
+# model tuning 
+trctrl <- trainControl(method = "repeatedcv", 
+                       number = 10, repeats = 5, search = "grid")
+mtry <- ncol(train_x)
+ntrees <- 101
+tunegrid <- expand.grid(.mtry = c(2:mtry))
+metric = "Accuracy"
+# following can be commented out if loading a pretrained model from file 
+# parallel processing to speed things up
+# random forest model 
+cl <- makePSOCKcluster(5)
+registerDoParallel(cl)
+rf_recession <- train(x = train_x, y = train_y, method = "rf", metric = metric, trControl = trctrl, tuneGrid = tunegrid, ntree = ntrees)
+stopCluster(cl)
+saveRDS(rf_recession, "./models/rf_1mth_all.RDS")
+rf_recession <- readRDS("./models/rf_1mth_all.RDS")
+predict_y <- predict(rf_recession, newdata = test_x)
+predict_y_prob <- predict(rf_recession,newdata = test_x, "prob")
+predict_y_prob$date <- econ_situation_nber_df$date[-testIDs]
+predict_y_prob$actual <- test_y
+predict_y_prob$predicted <- predict_y
+cm_1mth_all <- confusionMatrix(predict_y, reference = test_y)
+saveRDS(cm_1mth_all, "./models/confusion_matrix_1mth_all.RDS")
+cm_1mth_all$overall
+
+prob_model <- ggplotly(ggplot(predict_y_prob, aes(x = date, y = Y)) +
+                         geom_point(aes(color = actual)) + 
+                         geom_hline(yintercept = 0.50) + 
+                         labs(y = "Probability", x = "Date", colour = "NBER", 
+                              title = "Probability of a Recession a Month Ahead", subtitle = "Probabilistic Prediction of a Random Forest Model"))
+saveRDS(prob_model, "./models/ggplot_prob_model.RDS")
+prob_model
+```
+
+```{r random_forest two month, fig.height=8, fig.width=8}
+# creating test-train data
+testIDs <- createDataPartition(econ_situation_nber_df$NBER_recession_two, p = 0.7, list = F)
+train_x <- econ_situation_nber_df[testIDs,c(4:17)]
+train_y <- econ_situation_nber_df$NBER_recession_two[testIDs]
+test_x <- econ_situation_nber_df[-testIDs, c(4:17)]
+test_y <- econ_situation_nber_df$NBER_recession_two[-testIDs] 
+
+# model tuning 
+trctrl <- trainControl(method = "repeatedcv", 
+                       number = 10, repeats = 5, search = "grid")
+mtry <- ncol(train_x)
+ntrees <- 101
+tunegrid <- expand.grid(.mtry = c(2:mtry))
+metric = "Accuracy"
+# following can be commented out if loading a pretrained model from file 
+# parallel processing to speed things up
+# random forest model 
+cl <- makePSOCKcluster(5)
+registerDoParallel(cl)
+rf_recession2 <- train(x = train_x, y = train_y, method = "rf", metric = metric, trControl = trctrl, tuneGrid = tunegrid, ntree = ntrees)
+stopCluster(cl)
+saveRDS(rf_recession2, "./models/rf_2mth_all.RDS")
+rf_recession2 <- readRDS("./models/rf_2mth_all.RDS")
+predict_y <- predict(rf_recession2, newdata = test_x)
+predict_y_prob <- predict(rf_recession2,newdata = test_x, "prob")
+predict_y_prob$date <- econ_situation_nber_df$date[-testIDs]
+predict_y_prob$actual <- test_y
+predict_y_prob$predicted <- predict_y
+cm_2mth_all <- confusionMatrix(predict_y, reference = test_y)
+saveRDS(cm_2mth_all, "./models/confusion_matrix_2mth_all.RDS")
+cm_2mth_all$byClass
+
+prob_model_2 <- ggplotly(ggplot(predict_y_prob, aes(x = date, y = Y)) +
+                         geom_point(aes(color = actual)) + 
+                         geom_hline(yintercept = 0.50) + 
+                         labs(y = "Probability", x = "Date", colour = "NBER", 
+                              title = "Probability of a Recession 2 Months Ahead", subtitle = "Probabilistic Prediction of a Random Forest Model"))
+saveRDS(prob_model_2, "./models/ggplot_prob_model_2.RDS")
+prob_model_2
+```
+
+```{r testing for predicted march data}
+gdp_change_lagged <- -0.655704
+test_data_2 <- cbind(gdp_change_lagged, electricity_complete[567,2:3], rigs_complete[567,2:3], business_sentiment[567,2:5], LT_unemployed_complete[567, 2:5], yield_curve[459,2])
+predict_y_prob_april20 <- predict(rf_recession,newdata = test_data_2, "prob")
+predict_y_prob_may20 <- predict(rf_recession2,newdata = test_data_2, "prob")
+econ_state <- c("Expansion", "Contraction")
+predict_y_prob_april20
+predict_y_prob_may20
+forecast_df2 <- cbind(econ_state, t(predict_y_prob_april20), t(predict_y_prob_may20)) %>%
+  data.frame()
+colnames(forecast_df2) <- c("Econ. State", "April 2020", "May 2020")
+kable(forecast_df2, caption = "R.F. Predictions based on March 2020") %>%
+  kable_styling(bootstrap_options = c("striped","hover", "condensed"))
+```
+
+### Visualizing Random Forest  
+  
+The following selects a decision tree from the random forest model and plots it. `tree_func` adopted wholesale from [here](https://shiring.github.io/machine_learning/2017/03/16/rf_plot_ggraph)
+
+```{r plotting random forest, warning=FALSE, message=FALSE}
+# 
+
+tree_func <- function(final_model, 
+                      tree_num) {
+  
+  # get tree by index
+  tree <- randomForest::getTree(final_model, 
+                                k = tree_num, 
+                                labelVar = TRUE) %>%
+    tibble::rownames_to_column() %>%
+    # make leaf split points to NA, so the 0s won't get plotted
+    mutate(`split point` = ifelse(is.na(prediction), `split point`, NA))
+  
+  # prepare data frame for graph
+  graph_frame <- data.frame(from = rep(tree$rowname, 2),
+                            to = c(tree$`left daughter`, tree$`right daughter`))
+  
+  # convert to graph and delete the last node that we don't want to plot
+  graph <- graph_from_data_frame(graph_frame) %>%
+    delete_vertices("0")
+  
+  # set node labels
+  V(graph)$node_label <- gsub("_", " ", as.character(tree$`split var`))
+  V(graph)$leaf_label <- as.character(tree$prediction)
+  V(graph)$split <- as.character(round(tree$`split point`, digits = 2))
+  
+  # plot
+  plot <- ggraph(graph, 'dendrogram') + 
+    theme_bw() +
+    geom_edge_link() +
+    geom_node_point() +
+    geom_node_text(aes(label = node_label), na.rm = TRUE, repel = TRUE) +
+    geom_node_label(aes(label = split), vjust = 2.5, na.rm = TRUE, fill = "white") +
+    geom_node_label(aes(label = leaf_label, fill = leaf_label), na.rm = TRUE, 
+					repel = TRUE, colour = "white", fontface = "bold", show.legend = FALSE) +
+    theme(panel.grid.minor = element_blank(),
+          panel.grid.major = element_blank(),
+          panel.background = element_blank(),
+          plot.background = element_rect(fill = "white"),
+          panel.border = element_blank(),
+          axis.line = element_blank(),
+          axis.text.x = element_blank(),
+          axis.text.y = element_blank(),
+          axis.ticks = element_blank(),
+          axis.title.x = element_blank(),
+          axis.title.y = element_blank(),
+          plot.title = element_text(size = 18))
+  
+  print(plot)
+}
+
+tree_num <- which(rf_recession$finalModel$forest$ndbigtree == min(rf_recession$finalModel$forest$ndbigtree))
+tree_plot <- tree_func(final_model = rf_recession$finalModel, tree_num[1])
+saveRDS(tree_plot, "./models/tree_plot.RDS")
+```
+
